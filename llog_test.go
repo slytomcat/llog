@@ -2,8 +2,6 @@ package llog
 
 import (
 	"fmt"
-	lg "log"
-	"os"
 	"testing"
 )
 
@@ -15,20 +13,20 @@ func testCriticalf(level int) {
 			}
 		}
 	}()
-	log.Criticalf("%s-%s-%s\n", "It", "is", "CRITICALf")
+	Criticalf("%s-%s-%s\n", "It", "is", "CRITICALf")
 }
 
 func testset(level int) {
-	log.SetLevel(level)
+	CurrntLevel = level
 	fmt.Printf("\n\nMessages in %d level\n", level)
-	log.Debug("It", "is", "DEBUG")
-	log.Debugf("%s-%s-%s\n", "It", "is", "DEBUGf")
-	log.Info("It", "is", "INFO")
-	log.Infof("%s-%s-%s\n", "It", "is", "INFOf")
-	log.Warning("It", "is", "WARNING")
-	log.Warningf("%s-%s-%s\n", "It", "is", "WARNINGf")
-	log.Error("It", "is", "ERROR")
-	log.Errorf("%s-%s-%s\n", "It", "is", "ERRORf")
+	Debug("It", "is", "DEBUG")
+	Debugf("%s-%s-%s\n", "It", "is", "DEBUGf")
+	Info("It", "is", "INFO")
+	Infof("%s-%s-%s\n", "It", "is", "INFOf")
+	Warning("It", "is", "WARNING")
+	Warningf("%s-%s-%s\n", "It", "is", "WARNINGf")
+	Error("It", "is", "ERROR")
+	Errorf("%s-%s-%s\n", "It", "is", "ERRORf")
 	defer func() {
 		if r := recover(); r != nil {
 			if r != "It is CRITICAL\n" {
@@ -37,19 +35,18 @@ func testset(level int) {
 			testCriticalf(level)
 		}
 	}()
-	log.Critical("It", "is", "CRITICAL")
+	Critical("It", "is", "CRITICAL")
 }
 
-var log *Logger
 
 var T *testing.T
 
 func TestAll(t *testing.T) {
 	T = t
-	log = New(os.Stderr, "", lg.Lshortfile|lg.Lmicroseconds)
 	testset(DEBUG)
 	testset(INFO)
 	testset(WARNING)
 	testset(ERROR)
 	testset(CRITICAL)
 }
+
