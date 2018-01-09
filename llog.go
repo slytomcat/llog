@@ -8,6 +8,10 @@
 // 		ERROR (level 40) - outputs only error and critical messages
 // 		CRITICAL (level 50) - outputs only critical messages
 //
+// Loggging level must be set ONLY ONCE (thre is no way to decrease logging level).
+// Logging level is set via SetLevel(level int). It's better to use constatns DEBUG, INFO,
+// WARNING, ERROR or CRITICAL instead of their numeric value.
+//
 //
 // To create the log message you have to use one of the following methods:
 //	Debug(v ...interface{}) - equal to log.Println() when logging level is DEBUG
@@ -18,8 +22,8 @@
 //	Warningf(format string, v ...interface{}) - equal to log.Printf() when logging level is DEBUG, INFO or WARNING
 //	Error(v ...interface{}) - equal to log.Println() when logging level is DEBUG, INFO, WARNING or ERROR
 //	Errorf(format string, v ...interface{}) - equal to log.Printf() when logging level is DEBUG, INFO, WARNING or ERROR
-//	Critical(v ...interface{}) - equal to log.Fatalln() in any logging level
-//	Criticalf(format string, v ...interface{}) - equal to log.Fatalf() in any logging level
+//	Critical(v ...interface{}) - equal to log.Panicln() in any logging level
+//	Criticalf(format string, v ...interface{}) - equal to log.Panicf() in any logging level
 //
 
 package llog
@@ -37,61 +41,61 @@ const (
 	CRITICAL
 )
 
-var CurrntLevel = 30
-
-func Debug(v ...interface{}) {
-	if CurrntLevel >= DEBUG {
-		log.Println(append([]interface{}{"D:"}, v...)...)
+func SetLevel(level int) {
+	if level > DEBUG {
+		Debug = func(v ...interface{}) {}
+		Debugf = func(f string, v ...interface{}) {}
+	}
+	if level > INFO {
+		Info = func(v ...interface{}) {}
+		Infof = func(f string, v ...interface{}) {}
+	}
+	if level > WARNING {
+		Warning = func(v ...interface{}) {}
+		Warningf = func(f string, v ...interface{}) {}
+	}
+	if level > ERROR {
+		Error = func(v ...interface{}) {}
+		Errorf = func(f string, v ...interface{}) {}
 	}
 }
 
-func Debugf(f string, v ...interface{}) {
-	if CurrntLevel >= DEBUG {
-		log.Printf("%s "+f, append([]interface{}{"D:"}, v...)...)
-	}
+var Debug = func(v ...interface{}) {
+	log.Println(append([]interface{}{"D:"}, v...)...)
 }
 
-func Info(v ...interface{}) {
-	if CurrntLevel >= INFO {
-		log.Println(append([]interface{}{"I:"}, v...)...)
-	}
+var Debugf = func(f string, v ...interface{}) {
+	log.Printf("%s "+f, append([]interface{}{"D:"}, v...)...)
 }
 
-func Infof(f string, v ...interface{}) {
-	if CurrntLevel >= INFO {
-		log.Printf("%s "+f, append([]interface{}{"I:"}, v...)...)
-	}
+var Info = func(v ...interface{}) {
+	log.Println(append([]interface{}{"I:"}, v...)...)
 }
 
-func Warning(v ...interface{}) {
-	if CurrntLevel >= WARNING {
-		log.Println(append([]interface{}{"W:"}, v...)...)
-	}
+var Infof = func(f string, v ...interface{}) {
+	log.Printf("%s "+f, append([]interface{}{"I:"}, v...)...)
 }
 
-func Warningf(f string, v ...interface{}) {
-	if CurrntLevel >= INFO {
-		log.Printf("%s "+f, append([]interface{}{"W:"}, v...)...)
-	}
+var Warning = func(v ...interface{}) {
+	log.Println(append([]interface{}{"W:"}, v...)...)
 }
 
-func Error(v ...interface{}) {
-	if CurrntLevel >= WARNING {
-		log.Println(append([]interface{}{"E:"}, v...)...)
-	}
+var Warningf = func(f string, v ...interface{}) {
+	log.Printf("%s "+f, append([]interface{}{"W:"}, v...)...)
 }
 
-func Errorf(f string, v ...interface{}) {
-	if CurrntLevel >= INFO {
-		log.Printf("%s "+f, append([]interface{}{"E:"}, v...)...)
-	}
+var Error = func(v ...interface{}) {
+	log.Println(append([]interface{}{"E:"}, v...)...)
+}
+
+var Errorf = func(f string, v ...interface{}) {
+	log.Printf("%s "+f, append([]interface{}{"E:"}, v...)...)
 }
 
 func Critical(v ...interface{}) {
-	log.Fatalln(append([]interface{}{"C:"}, v...)...)
+	log.Panicln(append([]interface{}{"C:"}, v...)...)
 }
 
 func Criticalf(f string, v ...interface{}) {
-	log.Fatalf("%s "+f, append([]interface{}{"C:"}, v...)...)
+	log.Panicf("%s "+f, append([]interface{}{"C:"}, v...)...)
 }
-

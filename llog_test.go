@@ -1,24 +1,20 @@
 package llog
 
 import (
-	"fmt"
+	"log"
+	"os"
 	"testing"
 )
 
-func testCriticalf(level int) {
+func testCriticalf() {
 	defer func() {
-		if r := recover(); r != nil {
-			if r != "It-is-CRITICALf\n" {
-				T.Error("CRITICALf in level:", level)
-			}
-		}
+		_ = recover()
 	}()
 	Criticalf("%s-%s-%s\n", "It", "is", "CRITICALf")
 }
 
 func testset(level int) {
-	CurrntLevel = level
-	fmt.Printf("\n\nMessages in %d level\n", level)
+	SetLevel(level)
 	Debug("It", "is", "DEBUG")
 	Debugf("%s-%s-%s\n", "It", "is", "DEBUGf")
 	Info("It", "is", "INFO")
@@ -28,25 +24,74 @@ func testset(level int) {
 	Error("It", "is", "ERROR")
 	Errorf("%s-%s-%s\n", "It", "is", "ERRORf")
 	defer func() {
-		if r := recover(); r != nil {
-			if r != "It is CRITICAL\n" {
-				T.Error("CRITICAL in level:", level)
-			}
-			testCriticalf(level)
-		}
+		_ = recover()
+		testCriticalf()
 	}()
 	Critical("It", "is", "CRITICAL")
 }
 
-
-var T *testing.T
-
-func TestAll(t *testing.T) {
-	T = t
-	testset(DEBUG)
-	testset(INFO)
-	testset(WARNING)
-	testset(ERROR)
-	testset(CRITICAL)
+func TestMain(m *testing.M) {
+	log.SetPrefix("")
+	log.SetFlags(0)
+	os.Exit(m.Run())
 }
 
+func ExampleDebug() {
+	log.SetOutput(os.Stdout)
+	testset(DEBUG)
+	// Output:
+	// D: It is DEBUG
+	// D: It-is-DEBUGf
+	// I: It is INFO
+	// I: It-is-INFOf
+	// W: It is WARNING
+	// W: It-is-WARNINGf
+	// E: It is ERROR
+	// E: It-is-ERRORf
+	// C: It is CRITICAL
+	// C: It-is-CRITICALf
+}
+
+func ExampleInfo() {
+	log.SetOutput(os.Stdout)
+	testset(INFO)
+	// Output:
+	// I: It is INFO
+	// I: It-is-INFOf
+	// W: It is WARNING
+	// W: It-is-WARNINGf
+	// E: It is ERROR
+	// E: It-is-ERRORf
+	// C: It is CRITICAL
+	// C: It-is-CRITICALf
+}
+
+func ExampleWarning() {
+	log.SetOutput(os.Stdout)
+	testset(WARNING)
+	// Output:
+	// W: It is WARNING
+	// W: It-is-WARNINGf
+	// E: It is ERROR
+	// E: It-is-ERRORf
+	// C: It is CRITICAL
+	// C: It-is-CRITICALf
+}
+
+func ExampleError() {
+	log.SetOutput(os.Stdout)
+	testset(ERROR)
+	// Output:
+	// E: It is ERROR
+	// E: It-is-ERRORf
+	// C: It is CRITICAL
+	// C: It-is-CRITICALf
+}
+
+func ExampleCritical() {
+	log.SetOutput(os.Stdout)
+	testset(CRITICAL)
+	// Output:
+	// C: It is CRITICAL
+	// C: It-is-CRITICALf
+}
