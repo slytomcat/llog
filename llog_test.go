@@ -31,8 +31,7 @@ func testset(level int) {
 }
 
 func TestMain(m *testing.M) {
-	log.SetPrefix("")
-	log.SetFlags(0)
+	Init(os.Stdout, "", 0, DEBUG)
 	os.Exit(m.Run())
 }
 
@@ -92,6 +91,58 @@ func ExampleCritical() {
 	log.SetOutput(os.Stdout)
 	testset(CRITICAL)
 	// Output:
+	// C: It is CRITICAL
+	// C: It-is-CRITICALf
+}
+
+func ExampleError1() {
+	log.SetOutput(os.Stdout)
+	testset(ERROR)
+	// Output:
+	// E: It is ERROR
+	// E: It-is-ERRORf
+	// C: It is CRITICAL
+	// C: It-is-CRITICALf
+}
+
+func ExampleWarning1() {
+	log.SetOutput(os.Stdout)
+	testset(WARNING)
+	// Output:
+	// W: It is WARNING
+	// W: It-is-WARNINGf
+	// E: It is ERROR
+	// E: It-is-ERRORf
+	// C: It is CRITICAL
+	// C: It-is-CRITICALf
+}
+
+func ExampleInfo1() {
+	log.SetOutput(os.Stdout)
+	testset(INFO)
+	// Output:
+	// I: It is INFO
+	// I: It-is-INFOf
+	// W: It is WARNING
+	// W: It-is-WARNINGf
+	// E: It is ERROR
+	// E: It-is-ERRORf
+	// C: It is CRITICAL
+	// C: It-is-CRITICALf
+}
+
+func ExampleDebug1() {
+	log.SetOutput(os.Stdout)
+	testset(DEBUG)
+	// Output:
+	// D: It is DEBUG
+	// D: It-is-DEBUGf
+	// I: It is INFO
+	// I: It-is-INFOf
+	// W: It is WARNING
+	// W: It-is-WARNINGf
+	// E: It is ERROR
+	// E: It-is-ERRORf
 	// C: It is CRITICAL
 	// C: It-is-CRITICALf
 }
