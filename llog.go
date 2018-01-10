@@ -1,5 +1,6 @@
 // llog - leveled logging.
 // It is similar to standard log package but provides more flexibility in logging levels.
+// llog uses standard log as backbone.
 //
 // Package provides 5 levels of logging:
 // 		DEBUG (level 10) - outputs all messages
@@ -47,16 +48,16 @@ func SetLevel(level int) {
 		Debugf = func(f string, v ...interface{}) {}
 	}
 	if level > INFO {
-		Info = func(v ...interface{}) {}
-		Infof = func(f string, v ...interface{}) {}
+		Info = Debug
+		Infof = Debugf
 	}
 	if level > WARNING {
-		Warning = func(v ...interface{}) {}
-		Warningf = func(f string, v ...interface{}) {}
+		Warning = Debug
+		Warningf = Debugf
 	}
 	if level > ERROR {
-		Error = func(v ...interface{}) {}
-		Errorf = func(f string, v ...interface{}) {}
+		Error = Debug
+		Errorf = Debugf
 	}
 }
 
