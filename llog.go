@@ -1,6 +1,6 @@
 // llog - leveled logging.
 // It is similar to standard log package but provides more flexibility in logging levels.
-// llog uses standard log as backbone.
+// llog uses standard logger of log package as backbone.
 //
 // Package provides 5 levels of logging:
 // 		DEBUG (level 10) - outputs all messages
@@ -9,11 +9,19 @@
 // 		ERROR (level 40) - outputs only error and critical messages
 // 		CRITICAL (level 50) - outputs only critical messages
 //
-// Logging format&level can be set via Init(out io.Writer, prefix string, flag int, level int)
-// Parameters out, prefix and flag are the same parameters as in log.New()
-// It's better to use constants DEBUG, INFO, WARNING, ERROR or CRITICAL instead of their numeric
-// value.
-// Logging level can changed via SetLevel(level int).
+// Logging format&level can be set via call to
+//   Setup(out io.Writer, prefix string, flag int, level int)
+// Parameters out, prefix and flag are the same parameters as in log.New():
+//   out - the io.Writer used as output for messages (usually it is os.Stderr)
+//   prefix - log messages prefix
+//   flags - time$info flags (see https://golang.org/pkg/log/#pkg-constants for details)
+//   level - The logging level or -1 to set default level of logging (WARNING)
+// It's better to use constants DEBUG, INFO, WARNING, ERROR or CRITICAL for setting the level
+// instead of their numeric values.
+// Call of Setup - is optional, if it is not called, the default format of log package is used.
+//
+// Logging level can changed via SetLevel(level int). If logging level is not set (either by
+// Setup or by SetLevel) then logging level is WARNING.
 //
 // To create the log message you have to use one of the following methods:
 //	Debug(v ...interface{}) - equal to log.Println() when logging level is DEBUG
@@ -31,14 +39,15 @@
 // Debug*, Info*, Warning*, Error*, can be redefined as empty function but Critical always do its
 // job)
 //
-// Note: Init() configures the default logger of log lib. You may use other log functions to make
-// log messages.
+// Note: Setup() configures the default logger of log package. You may use other log package
+// functions to make log messages if it requered.
 
 package llog
 
 import (
-	"log"
+	"fmt"
 	"io"
+	"log"
 )
 
 const (
@@ -50,50 +59,49 @@ const (
 	CRITICAL
 )
 
-var(
-defaultDebug = func(v ...interface{}) {
-	log.Println(append([]interface{}{"D:"}, v...)...)
-}
-defaultDebugf = func(f string, v ...interface{}) {
-	log.Printf("%s "+f, append([]interface{}{"D:"}, v...)...)
-}
-defaultInfo = func(v ...interface{}) {
-	log.Println(append([]interface{}{"I:"}, v...)...)
-}
-defaultInfof = func(f string, v ...interface{}) {
-	log.Printf("%s "+f, append([]interface{}{"I:"}, v...)...)
-}
-defaultWarning = func(v ...interface{}) {
-	log.Println(append([]interface{}{"W:"}, v...)...)
-}
-defaultWarningf = func(f string, v ...interface{}) {
-	log.Printf("%s "+f, append([]interface{}{"W:"}, v...)...)
-}
-defaultError = func(v ...interface{}) {
-	log.Println(append([]interface{}{"E:"}, v...)...)
-}
-defaultErrorf = func(f string, v ...interface{}) {
-	log.Printf("%s "+f, append([]interface{}{"E:"}, v...)...)
-}
+var (
+	defaultDebug = func(v ...interface{}) {
+		log.Output(2, "D: "+fmt.Sprintln(v...))
+	}
+	defaultDebugf = func(f string, v ...interface{}) {
+		log.Output(2, "D: "+fmt.Sprintf(f, v...))
+	}
+	defaultInfo = func(v ...interface{}) {
+		log.Output(2, "I: "+fmt.Sprintln(v...))
+	}
+	defaultInfof = func(f string, v ...interface{}) {
+		log.Output(2, "I: "+fmt.Sprintf(f, v...))
+	}
+	defaultWarning = func(v ...interface{}) {
+		log.Output(2, "W: "+fmt.Sprintln(v...))
+	}
+	defaultWarningf = func(f string, v ...interface{}) {
+		log.Output(2, "W: "+fmt.Sprintf(f, v...))
+	}
+	defaultError = func(v ...interface{}) {
+		log.Output(2, "E: "+fmt.Sprintln(v...))
+	}
+	defaultErrorf = func(f string, v ...interface{}) {
+		log.Output(2, "E: "+fmt.Sprintf(f, v...))
+	}
 
-defaultNop = func(v ...interface{}) {}
-defaultNopf = func(f string, v ...interface{}) {}
+	defaultNop  = func(v ...interface{}) {}
+	defaultNopf = func(f string, v ...interface{}) {}
 
-// initial settings for default logging level WARNING
-Debug = defaultNop
-Debugf = defaultNopf
-Info = defaultNop
-Infof = defaultNopf
-Warning = defaultWarning
-Warningf = defaultWarningf
-Error = defaultError
-Errorf = defaultErrorf
+	// initial settings for default logging level WARNING
+	Debug    = defaultNop;			Debugf   = defaultNopf
+	Info     = defaultNop;			Infof    = defaultNopf
+	Warning  = defaultWarning;	Warningf = defaultWarningf
+	Error    = defaultError;		Errorf   = defaultErrorf
 )
 
-func Init(out io.Writer, prefix string, flag int, level int) {
+func Setup(out io.Writer, prefix string, flag int, level int) {
 	log.SetOutput(out)
 	log.SetPrefix(prefix)
 	log.SetFlags(flag)
+	if level < 0 {
+		level = WARNING
+	}
 	SetLevel(level)
 }
 
@@ -132,11 +140,14 @@ func SetLevel(level int) {
 	}
 }
 
-
 func Critical(v ...interface{}) {
-	log.Panicln(append([]interface{}{"C:"}, v...)...)
+	s := "C: "+fmt.Sprintln(v...)
+	log.Output(2, s)
+	panic(s)
 }
 
 func Criticalf(f string, v ...interface{}) {
-	log.Panicf("%s "+f, append([]interface{}{"C:"}, v...)...)
+	s := "C: "+fmt.Sprintf(f, v...)
+	log.Output(2, s)
+	panic(s)
 }
