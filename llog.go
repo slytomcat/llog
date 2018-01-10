@@ -27,7 +27,11 @@
 //	Critical(v ...interface{}) - equal to log.Panicln() in any logging level
 //	Criticalf(format string, v ...interface{}) - equal to log.Panicf() in any logging level
 //
-// Note: Init configures the default logger of log lib. You may use other log functions to make
+// When logging level is greater than level of created message then function do nothing (functions
+// Debug*, Info*, Warning*, Error*, can be redefined as empty function but Critical always do its
+// job)
+//
+// Note: Init() configures the default logger of log lib. You may use other log functions to make
 // log messages.
 
 package llog
