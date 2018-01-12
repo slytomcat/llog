@@ -1,153 +1,275 @@
-// llog - leveled logging.
-// It is similar to standard log package but provides more flexibility in logging levels.
-// llog uses standard logger of log package as backbone.
+// Package llog implements level-restricted logging.
+// It is similar and based to standard log package but provides additional flexibility
+// in management of logging messages.
 //
 // Package provides 5 levels of logging:
-// 		DEBUG (level 10) - outputs all messages
-// 		INFO (level 20) - outputs all messages except debug messages
-// 		WARNING (level 30) - outputs all messages except debug and info messages - it is default level
-// 		ERROR (level 40) - outputs only error and critical messages
-// 		CRITICAL (level 50) - outputs only critical messages
+// 	DEBUG			- output all messages (lowest level)
+// 	INFO			- output all messages except debug messages
+// 	WARNING			- output all messages except debug and info messages - it is default level
+// 	ERROR			- output only error and critical messages
+// 	CRITICAL		- output only critical messages (highest level)
 //
-// Logging format&level can be set via call to
-//   Setup(out io.Writer, prefix string, flag int, level int)
-// Parameters out, prefix and flag are the same parameters as in log.New():
-//   out - the io.Writer used as output for messages (usually it is os.Stderr)
-//   prefix - log messages prefix
-//   flags - time$info flags (see https://golang.org/pkg/log/#pkg-constants for details)
-//   level - The logging level or -1 to set default level of logging (WARNING)
-// It's better to use constants DEBUG, INFO, WARNING, ERROR or CRITICAL for setting the level
-// instead of their numeric values.
-// Call of Setup - is optional, if it is not called, the default format of log package is used.
+// By default standard logger uses os.Stderr as output, "" as prefix,
+// log.LstdFlags (see https://golang.org/pkg/log/#pkg-constants for details) as flags, and
+// WARNING as logging level.
 //
-// Logging level can changed via SetLevel(level int). If logging level is not set (either by
-// Setup or by SetLevel) then logging level is WARNING.
+// Current logging level of default logger can be changed via SetLevel(level int).
+// Use constants DEBUG, INFO, WARNING, ERROR or CRITICAL for setting the level value.
+// You can also set output: SetOutput(w io.Writer), log message prefix: SetPrefix(prefix string),
+// and message format flags: SetFlags(flag int) (see https://golang.org/pkg/log/#pkg-constants
+// for details about flags).
 //
-// To create the log message you have to use one of the following methods:
-//	Debug(v ...interface{}) - equal to log.Println() when logging level is DEBUG
-//	Debugf(format string, v ...interface{}) - equal to log.Printf() when logging level is DEBUG
-//	Info(v ...interface{}) - equal to log.Println() when logging level is DEBUG or INFO
-//	Infof(format string, v ...interface{}) - equal to log.Printf() when logging level is DEBUG or INFO
-//	Warning(v ...interface{}) - equal to log.Println() when logging level is DEBUG, INFO or WARNING
-//	Warningf(format string, v ...interface{}) - equal to log.Printf() when logging level is DEBUG, INFO or WARNING
-//	Error(v ...interface{}) - equal to log.Println() when logging level is DEBUG, INFO, WARNING or ERROR
-//	Errorf(format string, v ...interface{}) - equal to log.Printf() when logging level is DEBUG, INFO, WARNING or ERROR
-//	Critical(v ...interface{}) - equal to log.Panicln() in any logging level
-//	Criticalf(format string, v ...interface{}) - equal to log.Panicf() in any logging level
+// To create the log message (via default logger) of the required level you have to
+// use one of the following methods:
+//  Debug(v ...interface{})			// equal to log.Println() when logging level is DEBUG
+//  Info(v ...interface{}) 			// equal to log.Println() when logging level is INFO or less
+//  Warning(v ...interface{})		// equal to log.Println() when logging level is WARNING or less
+//  Error(v ...interface{})			// equal to log.Println() when logging level is ERROR or less
+//  Critical(v ...interface{})		// equal to log.Panicln() in any logging level
+//  Debugf(format string, v ...interface{})			// equal to log.Printf() when logging level is DEBUG
+//  Infof(format string, v ...interface{})			// equal to log.Printf() when logging level is INFO or less
+//  Warningf(format string, v ...interface{})		// equal to log.Printf() when logging level is WARNING or less
+//  Errorf(format string, v ...interface{})			// equal to log.Printf() when logging level is ERROR or less
+//  Criticalf(format string, v ...interface{})		// equal to log.Panicf() in any logging level
 //
-// When logging level is greater than level of created message then function do nothing (functions
-// Debug*, Info*, Warning*, Error*, can be redefined as empty function but Critical always do its
-// job)
+// Output of the functions will be additionally tagged with 1 letter identifier of logging level
+// of message: D(EBUG), I(NFO), W(ARNING), E(RROR) or C(RITICAL). For example
+//	Warning("Some message") // Output: W: Some message
 //
-// Note: Setup() configures the default logger of log package. You may use other log package
-// functions to make log messages if it requered.
-
+// When the current logging level is greater than level of created message then function do nothing.
+//
+// New() allows to create the Logger that has the same methods as standard logger.
+//
+// NOTE: as llog.Logger is just extension of log.Logger the full set of log package
+// methods/functions/constants are available to use together with llog methods. But standard logger
+// has only llog declared methods.
 package llog
 
 import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 )
 
 const (
 	_ int = 10 * iota
-	DEBUG
-	INFO
-	WARNING // default
-	ERROR
-	CRITICAL
+	DEBUG        // 10
+	INFO         // 20
+	WARNING      // 30 default
+	ERROR        // 40
+	CRITICAL     // 50
 )
 
-var (
-	defaultDebug = func(v ...interface{}) {
-		log.Output(2, "D: "+fmt.Sprintln(v...))
-	}
-	defaultDebugf = func(f string, v ...interface{}) {
-		log.Output(2, "D: "+fmt.Sprintf(f, v...))
-	}
-	defaultInfo = func(v ...interface{}) {
-		log.Output(2, "I: "+fmt.Sprintln(v...))
-	}
-	defaultInfof = func(f string, v ...interface{}) {
-		log.Output(2, "I: "+fmt.Sprintf(f, v...))
-	}
-	defaultWarning = func(v ...interface{}) {
-		log.Output(2, "W: "+fmt.Sprintln(v...))
-	}
-	defaultWarningf = func(f string, v ...interface{}) {
-		log.Output(2, "W: "+fmt.Sprintf(f, v...))
-	}
-	defaultError = func(v ...interface{}) {
-		log.Output(2, "E: "+fmt.Sprintln(v...))
-	}
-	defaultErrorf = func(f string, v ...interface{}) {
-		log.Output(2, "E: "+fmt.Sprintf(f, v...))
-	}
+type Logger struct {
+	*log.Logger		// extend the Logger of standard log package
+	level int			// Current logging level
+}
 
-	defaultNop  = func(v ...interface{}) {}
-	defaultNopf = func(f string, v ...interface{}) {}
+var std = New(os.Stderr, "", log.LstdFlags, WARNING)
 
-	// initial settings for default logging level WARNING
-	Debug    = defaultNop;			Debugf   = defaultNopf
-	Info     = defaultNop;			Infof    = defaultNopf
-	Warning  = defaultWarning;	Warningf = defaultWarningf
-	Error    = defaultError;		Errorf   = defaultErrorf
-)
+// New returns new Logger.
+// Parameters out, prefix and flag are the same parameters as in log.New() from log package
+//  out - the io.Writer used as output for messages (usually it is os.Stderr)
+//  prefix - log messages prefix
+//  flags - time&info flags (see https://golang.org/pkg/log/#pkg-constants for details)
+//  level - The logging level or -1 to set default level of logging (WARNING)
+// It's better to use constants DEBUG, INFO, WARNING, ERROR or CRITICAL for setting the level
+// instead of their numeric values.
+func New(out io.Writer, prefix string, flag int, level int) Logger {
+	ret := Logger{
+		log.New(out, prefix, flag),
+		WARNING,
+	}
+	ret.SetLevel(WARNING)
+	return ret
+}
 
-func Setup(out io.Writer, prefix string, flag int, level int) {
-	log.SetOutput(out)
-	log.SetPrefix(prefix)
-	log.SetFlags(flag)
+// SetLevel sets logging level. Call of SetLevel is optional, if logging level is
+// not set (either by Setup() or by SetLevel() then logging level is WARNING.
+func (l *Logger) SetLevel(level int) {
 	if level < 0 {
 		level = WARNING
 	}
-	SetLevel(level)
+	l.level = level
 }
 
-func SetLevel(level int) {
-	if level > DEBUG {
-		Debug = defaultNop
-		Debugf = defaultNopf
-		if level > INFO {
-			Info = defaultNop
-			Infof = defaultNopf
-			if level > WARNING {
-				Warning = defaultNop
-				Warningf = defaultNopf
-				if level > ERROR {
-					Error = defaultNop
-					Errorf = defaultNopf
-					return
-				}
-			}
-		}
-	}
-	// here level <= ERROR
-	Error = defaultError
-	Errorf = defaultErrorf
-	if level <= WARNING {
-		Warning = defaultWarning
-		Warningf = defaultWarningf
-		if level <= INFO {
-			Info = defaultInfo
-			Infof = defaultInfof
-			if level <= DEBUG {
-				Debug = defaultDebug
-				Debugf = defaultDebugf
-			}
-		}
+// Debug prints debug level message to output if current logging level is DEBUG.
+// Debug is equal to log.Println()
+func (l Logger) Debug(v ...interface{}) {
+	if l.level == DEBUG {
+		l.Output(2, "D: "+fmt.Sprintln(v...))
 	}
 }
 
+// Debugf prints DEBUG level message to output if current logging level is DEBUG.
+// Debugf is equal to log.Printf()
+func (l Logger) Debugf(f string, v ...interface{}) {
+	if l.level == DEBUG {
+		l.Output(2, "D: "+fmt.Sprintf(f, v...))
+	}
+}
+
+// Info prints INFO level message to output if current logging level is INFO or less.
+// Info is equal to log.Println()
+func (l Logger) Info(v ...interface{}) {
+	if l.level <= INFO {
+		l.Output(2, "I: "+fmt.Sprintln(v...))
+	}
+}
+
+// Infof prints INFO level message to output if current logging level is INFO or less.
+// Infof is equal to log.Printf()
+func (l Logger) Infof(f string, v ...interface{}) {
+	if l.level <= INFO {
+		l.Output(2, "I: "+fmt.Sprintf(f, v...))
+	}
+}
+
+// Warning prints WARNING level message to output if current logging level is WARNING or less
+// Warning is equal to log.Println()
+func (l Logger) Warning(v ...interface{}) {
+	if l.level <= WARNING {
+		l.Output(2, "W: "+fmt.Sprintln(v...))
+	}
+}
+
+// Warningf prints WARNING level message to output if current logging level is WARNING or less
+// Warningf is equal to log.Printf()
+func (l Logger) Warningf(f string, v ...interface{}) {
+	if l.level <= WARNING {
+		l.Output(2, "W: "+fmt.Sprintf(f, v...))
+	}
+}
+
+// Error prints ERROR level message to output if current logging level is ERROR or less
+// Error is equal to log.Println()
+func (l Logger) Error(v ...interface{}) {
+	if l.level <= ERROR {
+		log.Output(2, "E: "+fmt.Sprintln(v...))
+	}
+}
+
+// Errorf prints ERROR level message to output if current logging level is ERROR or less
+// Errorf is equal to log.Printf()
+func (l Logger) Errorf(f string, v ...interface{}) {
+	if l.level <= ERROR {
+		log.Output(2, "E: "+fmt.Sprintf(f, v...))
+	}
+}
+
+// Critical always prints CRITICAL level message to output and then call panic()
+// Critical is equal to log.Panicln()
+func (l Logger) Critical(v ...interface{}) {
+	s := "C: " + fmt.Sprintln(v...)
+	l.Output(2, s)
+	panic(s)
+}
+
+// Criticalf always prints CRITICAL level message to output and then call panic()
+// Criticalf is equal to log.Panicf()
+func (l Logger) Criticalf(f string, v ...interface{}) {
+	s := "C: " + fmt.Sprintf(f, v...)
+	l.Output(2, s)
+	panic(s)
+}
+
+// Debug prints DEBUG level message to output if current logging level is DEBUG
+// Debug is equal to log.Println()
+func Debug(v ...interface{}) {
+	if std.level == DEBUG {
+		std.Output(2, "D: "+fmt.Sprintln(v...))
+	}
+}
+
+// Debugf prints DEBUG level message to output if current logging level is DEBUG
+// Debugf is equal to log.Printf()
+func Debugf(f string, v ...interface{}) {
+	if std.level == DEBUG {
+		std.Output(2, "D: "+fmt.Sprintf(f, v...))
+	}
+}
+
+// Info prints INFO level message to output if current logging level is INFO or less
+// Info is equal to log.Println()
+func Info(v ...interface{}) {
+	if std.level <= INFO {
+		std.Output(2, "I: "+fmt.Sprintln(v...))
+	}
+}
+
+// Infof prints INFO level message to output if current logging level is INFO or less
+// Infof is equal to log.Printf()
+func Infof(f string, v ...interface{}) {
+	if std.level <= INFO {
+		std.Output(2, "I: "+fmt.Sprintf(f, v...))
+	}
+}
+
+// Warning prints WARNING level message to output if current logging level is WARNING or less
+// Warning is equal to log.Println()
+func Warning(v ...interface{}) {
+	if std.level <= WARNING {
+		std.Output(2, "W: "+fmt.Sprintln(v...))
+	}
+}
+
+// Warningf prints WARNING level message to output if current logging level is WARNING or less
+// Warningf is equal to log.Printf()
+func Warningf(f string, v ...interface{}) {
+	if std.level <= WARNING {
+		std.Output(2, "W: "+fmt.Sprintf(f, v...))
+	}
+}
+
+// Error prints ERROR level message to output if current logging level is ERROR or less
+// Error is equal to log.Println()
+func Error(v ...interface{}) {
+	if std.level <= ERROR {
+		std.Output(2, "E: "+fmt.Sprintln(v...))
+	}
+}
+
+// Errorf prints ERROR level message to output if current logging level is ERROR or less
+// Errorf is equal to log.Printf()
+func Errorf(f string, v ...interface{}) {
+	if std.level <= ERROR {
+		std.Output(2, "E: "+fmt.Sprintf(f, v...))
+	}
+}
+
+// Critical always prints CRITICAL level message to output and then call panic()
+// Critical is equal to log.Panicln()
 func Critical(v ...interface{}) {
-	s := "C: "+fmt.Sprintln(v...)
-	log.Output(2, s)
+	s := "C: " + fmt.Sprintln(v...)
+	std.Output(2, s)
 	panic(s)
 }
 
+// Criticalf always prints CRITICAL level message to output and then call panic()
+// Criticalf is equal to log.Panicf()
 func Criticalf(f string, v ...interface{}) {
-	s := "C: "+fmt.Sprintf(f, v...)
-	log.Output(2, s)
+	s := "C: " + fmt.Sprintf(f, v...)
+	std.Output(2, s)
 	panic(s)
+}
+
+// SetOutput sets the default logger output. The same method is applicable to Logger.
+func SetOutput(w io.Writer) {
+	std.SetOutput(w)
+}
+
+// SetPrefix sets the messages prefix for default logger. The same method is applicable to Logger.
+func SetPrefix(prefix string) {
+	std.SetPrefix(prefix)
+}
+
+// SetFlags sets messages flags for default logger. The same method is applicable to Logger.
+func SetFlags(flag int) {
+	std.SetFlags(flag)
+}
+
+// SetLevel sets the current logging level for default logger. The same method is applicable to Logger.
+func SetLevel(level int) {
+	std.SetLevel(level)
 }
