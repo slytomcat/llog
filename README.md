@@ -4,11 +4,11 @@ It is similar and based to standard log package but provides additional flexibil
 in management of logging messages.
 
 Package provides 5 levels of logging:
-  DEBUG			- output all messages (lowest level)
-  INFO			- output all messages except debug messages
-  WARNING			- output all messages except debug and info messages - it is default level
-  ERROR			- output only error and critical messages
-  CRITICAL		- output only critical messages (highest level)
+    DEBUG			- output all messages (lowest level)
+    INFO			- output all messages except debug messages
+    WARNING			- output all messages except debug and info messages - it is default level
+    ERROR			- output only error and critical messages
+    CRITICAL		- output only critical messages (highest level)
 
 There is a standard logger that initialized with os.Stderr as output, "" as prefix,
 log.LstdFlags (see https://golang.org/pkg/log/#pkg-constants for details) as flags, and
@@ -21,20 +21,20 @@ and message format flags: SetFlags(flag int) (see https://golang.org/pkg/log/#pk
 for details about flags).
 
 To create a new log message of the required logging level you have to use one of the following functions:
-  Debug(v ...interface{})			// equal to log.Println() when logging level is DEBUG
-  Info(v ...interface{}) 			// equal to log.Println() when logging level is INFO or less
-  Warning(v ...interface{})		// equal to log.Println() when logging level is WARNING or less
-  Error(v ...interface{})			// equal to log.Println() when logging level is ERROR or less
-  Critical(v ...interface{})		// equal to log.Panicln() in any logging level
-  Debugf(format string, v ...interface{})			// equal to log.Printf() when logging level is DEBUG
-  Infof(format string, v ...interface{})			// equal to log.Printf() when logging level is INFO or less
-  Warningf(format string, v ...interface{})		// equal to log.Printf() when logging level is WARNING or less
-  Errorf(format string, v ...interface{})			// equal to log.Printf() when logging level is ERROR or less
-  Criticalf(format string, v ...interface{})		// equal to log.Panicf() in any logging level
+    Debug(v ...interface{})			// equal to log.Println() when logging level is DEBUG
+    Info(v ...interface{}) 			// equal to log.Println() when logging level is INFO or less
+    Warning(v ...interface{})		// equal to log.Println() when logging level is WARNING or less
+    Error(v ...interface{})			// equal to log.Println() when logging level is ERROR or less
+    Critical(v ...interface{})		// equal to log.Panicln() in any logging level
+    Debugf(format string, v ...interface{})			// equal to log.Printf() when logging level is DEBUG
+    Infof(format string, v ...interface{})			// equal to log.Printf() when logging level is INFO or less
+    Warningf(format string, v ...interface{})		// equal to log.Printf() when logging level is WARNING or less
+    Errorf(format string, v ...interface{})			// equal to log.Printf() when logging level is ERROR or less
+    Criticalf(format string, v ...interface{})		// equal to log.Panicf() in any logging level
 
 Output of the functions will be additionally tagged with one letter identifier of logging level
 of the message: D(EBUG), I(NFO), W(ARNING), E(RROR) or C(RITICAL). For example
-  Warning("Some message") // Output: W: Some message
+    Warning("Some message") // Output: W: Some message
 
 When the current logging level is greater than level of created message then function do nothing.
 
