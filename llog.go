@@ -62,7 +62,7 @@ const (
 )
 
 type Logger struct {
-	*log.Logger		// extend the Logger of standard log package
+	log.Logger		// extend the Logger of standard log package
 	level int			// Current logging level
 }
 
@@ -76,13 +76,15 @@ var std = New(os.Stderr, "", log.LstdFlags, WARNING)
 //  level - The logging level or -1 to set default level of logging (WARNING)
 // It's better to use constants DEBUG, INFO, WARNING, ERROR or CRITICAL for setting the level
 // instead of their numeric values.
-func New(out io.Writer, prefix string, flag int, level int) Logger {
-	ret := Logger{
-		log.New(out, prefix, flag),
-		WARNING,
+func New(out io.Writer, prefix string, flag int, level int) *Logger {
+	if level < 0 {
+		level = WARNING
 	}
-	ret.SetLevel(WARNING)
-	return ret
+	ret := Logger{
+		*log.New(out, prefix, flag),
+		level,
+	}
+	return &ret
 }
 
 // SetLevel sets logging level. Call of SetLevel is optional, if logging level is
@@ -96,7 +98,7 @@ func (l *Logger) SetLevel(level int) {
 
 // Debug prints debug level message to output if current logging level is DEBUG.
 // Debug is equal to log.Println()
-func (l Logger) Debug(v ...interface{}) {
+func (l *Logger) Debug(v ...interface{}) {
 	if l.level == DEBUG {
 		l.Output(2, "D: "+fmt.Sprintln(v...))
 	}
@@ -104,7 +106,7 @@ func (l Logger) Debug(v ...interface{}) {
 
 // Debugf prints DEBUG level message to output if current logging level is DEBUG.
 // Debugf is equal to log.Printf()
-func (l Logger) Debugf(f string, v ...interface{}) {
+func (l *Logger) Debugf(f string, v ...interface{}) {
 	if l.level == DEBUG {
 		l.Output(2, "D: "+fmt.Sprintf(f, v...))
 	}
@@ -112,7 +114,7 @@ func (l Logger) Debugf(f string, v ...interface{}) {
 
 // Info prints INFO level message to output if current logging level is INFO or less.
 // Info is equal to log.Println()
-func (l Logger) Info(v ...interface{}) {
+func (l *Logger) Info(v ...interface{}) {
 	if l.level <= INFO {
 		l.Output(2, "I: "+fmt.Sprintln(v...))
 	}
@@ -120,7 +122,7 @@ func (l Logger) Info(v ...interface{}) {
 
 // Infof prints INFO level message to output if current logging level is INFO or less.
 // Infof is equal to log.Printf()
-func (l Logger) Infof(f string, v ...interface{}) {
+func (l *Logger) Infof(f string, v ...interface{}) {
 	if l.level <= INFO {
 		l.Output(2, "I: "+fmt.Sprintf(f, v...))
 	}
@@ -128,7 +130,7 @@ func (l Logger) Infof(f string, v ...interface{}) {
 
 // Warning prints WARNING level message to output if current logging level is WARNING or less
 // Warning is equal to log.Println()
-func (l Logger) Warning(v ...interface{}) {
+func (l *Logger) Warning(v ...interface{}) {
 	if l.level <= WARNING {
 		l.Output(2, "W: "+fmt.Sprintln(v...))
 	}
@@ -136,7 +138,7 @@ func (l Logger) Warning(v ...interface{}) {
 
 // Warningf prints WARNING level message to output if current logging level is WARNING or less
 // Warningf is equal to log.Printf()
-func (l Logger) Warningf(f string, v ...interface{}) {
+func (l *Logger) Warningf(f string, v ...interface{}) {
 	if l.level <= WARNING {
 		l.Output(2, "W: "+fmt.Sprintf(f, v...))
 	}
@@ -144,23 +146,23 @@ func (l Logger) Warningf(f string, v ...interface{}) {
 
 // Error prints ERROR level message to output if current logging level is ERROR or less
 // Error is equal to log.Println()
-func (l Logger) Error(v ...interface{}) {
+func (l *Logger) Error(v ...interface{}) {
 	if l.level <= ERROR {
-		log.Output(2, "E: "+fmt.Sprintln(v...))
+		l.Output(2, "E: "+fmt.Sprintln(v...))
 	}
 }
 
 // Errorf prints ERROR level message to output if current logging level is ERROR or less
 // Errorf is equal to log.Printf()
-func (l Logger) Errorf(f string, v ...interface{}) {
+func (l *Logger) Errorf(f string, v ...interface{}) {
 	if l.level <= ERROR {
-		log.Output(2, "E: "+fmt.Sprintf(f, v...))
+		l.Output(2, "E: "+fmt.Sprintf(f, v...))
 	}
 }
 
 // Critical always prints CRITICAL level message to output and then call panic()
 // Critical is equal to log.Panicln()
-func (l Logger) Critical(v ...interface{}) {
+func (l *Logger) Critical(v ...interface{}) {
 	s := "C: " + fmt.Sprintln(v...)
 	l.Output(2, s)
 	panic(s)
@@ -168,7 +170,7 @@ func (l Logger) Critical(v ...interface{}) {
 
 // Criticalf always prints CRITICAL level message to output and then call panic()
 // Criticalf is equal to log.Panicf()
-func (l Logger) Criticalf(f string, v ...interface{}) {
+func (l *Logger) Criticalf(f string, v ...interface{}) {
 	s := "C: " + fmt.Sprintf(f, v...)
 	l.Output(2, s)
 	panic(s)
