@@ -21,11 +21,13 @@
 //
 // To create the log message (via default logger) of the required logging level you have to
 // use one of the following functions:
+//    - Arguments are handled in the manner of fmt.Println
 //  Debug(v ...interface{})			// equal to log.Println() when logging level is DEBUG
 //  Info(v ...interface{}) 			// equal to log.Println() when logging level is INFO or less
 //  Warning(v ...interface{})		// equal to log.Println() when logging level is WARNING or less
 //  Error(v ...interface{})			// equal to log.Println() when logging level is ERROR or less
 //  Critical(v ...interface{})		// equal to log.Panicln() in any logging level
+//    - Arguments are handled in the manner of fmt.Printf
 //  Debugf(format string, v ...interface{})			// equal to log.Printf() when logging level is DEBUG
 //  Infof(format string, v ...interface{})			// equal to log.Printf() when logging level is INFO or less
 //  Warningf(format string, v ...interface{})		// equal to log.Printf() when logging level is WARNING or less
@@ -52,8 +54,9 @@ import (
 	"os"
 )
 
+// Logging levels
 const (
-	_ int = 10 * iota
+	_        int = 10 * iota
 	DEBUG        // 10
 	INFO         // 20
 	WARNING      // 30 default
@@ -61,9 +64,10 @@ const (
 	CRITICAL     // 50
 )
 
+// Logger structure
 type Logger struct {
-	log.Logger		// extend the Logger of standard log package
-	level int			// Current logging level
+	log.Logger     // extend the Logger of standard log package
+	level      int // Current logging level
 }
 
 var std = New(os.Stderr, "", log.LstdFlags, WARNING)
@@ -88,7 +92,7 @@ func New(out io.Writer, prefix string, flag int, level int) *Logger {
 }
 
 // SetLevel sets logging level. Call of SetLevel is optional, if logging level is
-// not set (either by Setup() or by SetLevel() then logging level is WARNING.
+// not set then logging level is WARNING.
 func (l *Logger) SetLevel(level int) {
 	if level < 0 {
 		level = WARNING
@@ -271,7 +275,8 @@ func SetFlags(flag int) {
 	std.SetFlags(flag)
 }
 
-// SetLevel sets the current logging level for default logger. The same method is applicable to Logger.
+// SetLevel sets the current logging level for default logger. Call of SetLevel is optional, if logging level is
+// not set then logging level is WARNING.
 func SetLevel(level int) {
 	std.SetLevel(level)
 }
