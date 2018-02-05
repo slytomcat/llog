@@ -1,4 +1,6 @@
 # llog
+[![CircleCI](https://circleci.com/gh/slytomcat/llog.svg?style=svg)](https://circleci.com/gh/slytomcat/llog)
+
 Package llog implements level-restricted logging.
 It is similar and based to standard log package but provides additional flexibility
 in management of logging messages.
