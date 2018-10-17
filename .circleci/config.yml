@@ -18,7 +18,7 @@ jobs:
           command:  'go test -v -race -coverprofile cover.out'
       - run: 
           name: Generate code coverage
-          command: 'go tool cover -html=cover.out -o coverage.html'
+          command: 'sed -i "s/_$(pwd|sed 's/\//\\\//g')/./g" cover.out; go tool cover -html=cover.out -o coverage.html'
       - store_artifacts:
           path: coverage.html
           prefix: coverage
