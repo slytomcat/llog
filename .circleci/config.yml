@@ -6,19 +6,23 @@ jobs:
     steps:
       - checkout
       - run: 
-        name: Build
-        command: 'go build'
+          name: Build
+          command: 'go build'
   test:
     docker:
       - image: circleci/golang:1.10
     steps:
       - checkout
       - run: 
-        name: Tests
-        command:  'go test -v -race -coverprofile cover.out'
+          name: Tests
+          command:  'go test -v -race -coverprofile cover.out'
       - run: 
-        name: Results
-        command: 'go tool cover -html=cover.out -o $CIRCLE_TEST_REPORTS/coverage.html'
+          name: Generate code coverage
+          command: 'go tool cover -html=cover.out -o coverage.html'
+      - store_artifacts:
+          path: coverage.html
+          prefix: coverage
+
 workflows:
   version: 2
   build_and_test:
