@@ -16,7 +16,7 @@ jobs:
       - run: 
           name: Prepare
           command:  'go get -u github.com/jstemmer/go-junit-report'
-          command:  'mkdir results'
+      - run: 'mkdir results'
       - run: 
           name: Tests
           command:  'go test -v -race -coverprofile cover.out 2>&1 | go-junit-report > results/report.xml'
