@@ -23,9 +23,12 @@ jobs:
           command:  'go test -v -race -coverprofile cover.out 2>&1 | go-junit-report > results/report.xml'
       - run: 
           name: Format coverage
-          command: 'go tool cover -html=cover.out -o results/coverage.html'
+          command: 'go tool cover -html=cover.out -o coverage.html'
       - store_artifacts:
+          path: coverage.html
+      - store_test_results:
           path: results
+
 
 workflows:
   version: 2
