@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.11.1
     steps:
       - checkout
       - run: 
@@ -10,21 +10,21 @@ jobs:
           command: 'go build'
   test:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.11.1
     steps:
       - checkout
       - run: 
-          name: Tests
-          command:  'go test -v -race -coverprofile cover.out'
+          name: Prepare
+          command:  'go get -u github.com/jstemmer/go-junit-report'
+          command:  'mkdir results'
       - run: 
-          name: Fix coverage
-          command: cat cover.out
+          name: Tests
+          command:  'go test -v -race -coverprofile cover.out 2>&1 | go-junit-report > results/report.xml'
       - run: 
           name: Format coverage
-          command: 'go tool cover -html=cover.out -o coverage.html'
+          command: 'go tool cover -html=cover.out -o results/coverage.html'
       - store_artifacts:
-          path: coverage.html
-          prefix: coverage
+          path: results
 
 workflows:
   version: 2
