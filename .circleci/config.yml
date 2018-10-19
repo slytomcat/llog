@@ -20,7 +20,7 @@ jobs:
             mkdir results;
       - run: 
           name: Tests
-          command:  go test -v -race -coverprofile cover.out 2>&1 | tee /dev/tty | go-junit-report > results.xml
+          command:  go test -v -race -coverprofile cover.out 2>&1 | tee /dev/tty | go-junit-report > results/results.xml
       - run: 
           name: Format coverage
           command: go tool cover -html=cover.out -o coverage.html
