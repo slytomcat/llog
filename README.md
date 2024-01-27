@@ -1,5 +1,5 @@
 # llog
-[![CircleCI](https://circleci.com/gh/slytomcat/llog.svg?style=svg)](https://circleci.com/gh/slytomcat/llog)
+[![GithubGo](https://github.com/slytomcat/llog/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/slytomcat/llog/actions/workflows/go.yml)
 
 Package llog implements level-restricted logging.
 It is similar and based to standard log package but provides additional flexibility
